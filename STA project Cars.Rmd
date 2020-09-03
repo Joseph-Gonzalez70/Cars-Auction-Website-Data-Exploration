@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## STA 141 Project (ADD MORE COMMENTARY BEFORE POSTING!! add geom_ with time on x axis)
+## USA Car Auction Data Analysis
 
 ```{r}
 library(dplyr)
