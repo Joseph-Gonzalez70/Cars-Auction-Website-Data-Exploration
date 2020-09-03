@@ -1,0 +1,322 @@
+---
+title: "STA 141 Project"
+author: "Joseph Gonzalez"
+date: "5/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## STA 141 Project (ADD MORE COMMENTARY BEFORE POSTING!! add geom_ with time on x axis)
+
+```{r}
+library(dplyr)
+```
+
+
+
+```{r}
+#read in data set:
+data=read.csv("USA_cars_datasets.csv", header=TRUE)
+attach(data)
+n=dim(data)[1] #Total observations in the data
+```
+
+
+##This code analyzes the model and color categorical variables in the cars dataset:
+
+##Descriptive Statistics
+
+The dataset has 13 variables and 2499 observations.
+```{r}
+#First, we can chack for any missing values in the color and model columns
+all(which(is.na(data$color)==TRUE))  
+all(which(is.na(data$model)==TRUE)) 
+```
+
+There is no missing values in the color and model columns.
+
+```{r}
+#Identify the class
+class(model)
+class(color)
+
+```
+
+"Model" and "Color" are categorical variables that are classified as factors in the dataset.
+
+```{r}
+#Want to find the number of unique categories for each variable:
+n_distinct(model)
+n_distinct(color)
+```
+
+There are 127 unique models and 49 unique colors.
+
+A few details about the data set:
+```{r}
+#Mean, max, and min of price:
+mean(price) #$18,767.67
+max(price)  #$84,900
+min(price)  #$0, this is for cars that have no bids on them
+#We can look for all characteristics corresponding to the max and minimum values
+ind_min=which(price==min(price))
+ind_max=which(price==max(price))
+(min_set=data[ind_min,])
+(max_set=data[ind_max,])
+#Find the observations of color and model corresponding to maximum and minimum price:
+(min_mc=min_set[,c(4,8)])
+(max_mc=max_set[,c(4,8)])
+
+```
+ 
+General Observations: For the listed car prices, the mean is \$18767.67, the max price is \$84900, and the minimum value is 0(no current bids on the listing). For the the minimum priced listing, we can see that most are salvage insurance(except for 2 listings), have a high mileage(more than 75,000) or low mileage(0 or 1). We can also see that most are more than 10 years old(except for 6 listings). For the maximum priced listing, the car is a low mileage vehicle, around 3 years old, and a clean vehicle. It is also differs from the brands that match the minimum priced cars.
+
+Variable specific: I will look at the color and model for the maximum and minimum values.
+
+```{r}
+#This code generates a contingency table of color and model for the lowest priced cars
+min_mc=as.matrix(min_mc)
+table(min_mc[,1],min_mc[,2])
+```
+
+For the maximum value, the model of the car is sl-class and the color is silver. For the minimum value, we can refer to the contingency table above for the combinations of color and model. The ones that stand out are the 6 listings of cars that are a door model and black, 5 listings that are a door model and grey, 5 listings that are a door model and green, and 4 listings are a door model and red.
+
+
+
+In this section, we look at the top most listed car colors and the least listed car colors:
+
+```{r}
+#Generate pie charts
+tbl_color=count(data,color)
+tbl_color=arrange(tbl_color,n)
+tbl_color[1:20,] #The bottom 20 listed car colors
+tbl_color=arrange(tbl_color,desc(n))
+(bar_data_color=tbl_color[1:8,]) #This shows the top 8 listed colors
+pct=round((100*tbl_color$n)/n, digits = 2)
+pct=sort(pct, decreasing = TRUE)
+pct[1:8] #Percentages for the top 8 colors
+lbls=tbl_color$color
+lab=paste(lbls[1:6],pct[1:6])
+lab=paste(lab,"%", sep=' ')
+pie(tbl_color$n,labels=lab, col=color, main="Percentages of Color") #Pie chart for car colors
+#Barplot for the top
+ggplot(data = bar_data_color) +
+  geom_bar(mapping = aes(x = color, y = n),stat="identity")	+ labs(title="Most Listed Colors Bar Graph", x="Colors", y="Frequency")
+
+```
+
+The car colors white, black, gray, silver, red, and blue are the top 6 colors that were observed on the website ad. There were 707 white cars(28.29% of total observations), 516 black cars(20.65% of total observations), 395 gray cars(15.81% of total observations), 300 Silver cars(12% of total observations), 192 red cars(7.68% of total observations), and 151 blue cars(6.04% of total observations) that are listed in the ad. The colors that were only listed once were black clearcoat, bright white clearcoat, cayenne red, off-white, ruby red metallic tinted clearcoat, tuxedo black metallic, white platinum tri-coat metallic, billet silver metallic clearcoat, super black, triple yellow tri-coat.	
+
+
+For this section, we look at the most listed car models and least listed car models on the auction export ad:
+
+```{r}
+#Generate pie charts
+tbl_model=count(data,model)
+tbl_model=arrange(tbl_model,n)
+tbl_model[1:43,] #The bottom 43 listed car models
+tbl_model=arrange(tbl_model,desc(n))
+(bar_data_model=tbl_model[1:8,]) #This shows the top 8 listed models 
+pct=round((100*tbl_model$n)/n, digits = 2)
+pct=sort(pct, decreasing = TRUE)
+pct[1:6] #Percentages for the top 8 colors
+lbls=tbl_model$model
+lab=paste(lbls[1:6],pct[1:6])
+lab=paste(lab,"%", sep=' ')
+pie(tbl_model$n,labels=lab, col=color, main="Percentages of Model") #Pie chart for car models
+#Barplot for model
+ggplot(data = bar_data_model) +
+  geom_bar(mapping = aes(x = model, y = n),stat="identity")	+ labs(title="Model Bar Graph", x="Models", y="Frequency")
+```
+
+There are 43 car models that only had one listing. The top 8 car models listed on the Auction Export ad are door(26.05% of total observations), f-150(8.7% of total observations), doors(5.9% of total observations),	caravan(4.08% of total observations), mpv(3.48% of total observations), fusion(2.6% of total observations), durango(2.56% of total observations) and journey(2.44% of total observations).	
+
+
+-------------------------------------------------------------------------------------------------------
+Now, we can create a grouped box plot for color. We will create a grouped boxplot for the colors(most listings) displayed in the barplot above(which cover more than half the data).
+
+```{r}
+#This function takes in a vector of colors and outputs the grouped boxplot of those colors and the listed prices:
+#I split the colors to not overcrowd the plots.
+genboxplot=function(x1){ 
+  #Index provides the locations of the colors, passed through the function, in the main data set's color column
+  index<<-which(data$color==x1[1] | data$color==x1[2] | data$color==x1[3] | data$color==x1[4])  
+  box_data1= data[index,] 
+  ggplot(data=box_data1,mapping=aes(x=color,y=price))+geom_boxplot() + labs(title="Box Plot Colors", x="Colors", y="Price")
+}
+box1=as.vector(bar_data_color$color[1:4]) #white, black, gray, silver
+box2=as.vector(bar_data_color$color[5:8]) #red, blue, no_color, green   
+par(mfrow=c(1,2))
+genboxplot(box1)
+genboxplot(box2)
+#Organized by the top 8 listed colors, We can show mean price of cars and number of listings 
+#color_index provides the locations of the top 8 listed colors in the main data set's color column
+color_index=which(data$color==box1[1] | data$color==box1[2] | data$color==box1[3] | data$color==box1[4] | data$color==box2[1] | data$color==box2[2] | data$color==box2[3] | data$color==box2[4])
+data[color_index,] %>% #This section of code provides the mean and number of listings for the top 8 listed colors
+  group_by(color) %>%
+  summarise(avg=mean(price), Num_Listings=n()) %>%
+  arrange(desc(avg))   #We arrange information for the top 8 listed colors by decreasing average listed price
+```
+
+Now, we can create a grouped box plot for model. We will create a grouped boxplot for the eight models(most listings) displayed in the barplot above(which cover more than half the data).
+
+```{r}
+#This function takes in a vector of models and outputs the grouped boxplot of those models and the listed prices:
+#I split the models to not overcrowd the box plots.
+genboxplot=function(x1){
+  #Index provides the locations of the models, passed through the function, in the main data set's model column
+  index<<-which(data$model==x1[1] | data$model==x1[2] | data$model==x1[3] | data$model==x1[4])
+  box_data1= data[index,]
+  ggplot(data=box_data1,mapping=aes(x=model,y=price))+geom_boxplot() + labs(title="Box Plot Models", x="Models", y="Price")
+}
+box1=as.vector(bar_data_model$model[1:4]) #door, f-150, doors, caravan
+box2=as.vector(bar_data_model$model[5:8]) #mpv, fusion, durango, journey
+par(mfrow=c(1,2))
+genboxplot(box1)
+genboxplot(box2)
+#Organized by the top 8 listed models, We can show mean price of cars and number of listings 
+#model_index provides the locations of the top 8 listed models in the main data set's model column
+model_index=which(data$model==box1[1] | data$model==box1[2] | data$model==box1[3] | data$model==box1[4] | data$model==box2[1] | data$model==box2[2] | data$model==box2[3] | data$model==box2[4])
+data[model_index,] %>%   #This section of code provides the mean and number of listings for the top 8 listed models
+  group_by(model) %>%
+  summarise(avg=mean(price), Num_Listings=n()) %>%
+  arrange(desc(avg))    #We arrange information for the top 8 listed models by decreasing average listed price 
+```
+
+
+Pairwise comparison:
+
+In this section, we can look at pairwise comparison between color and model.
+
+```{r}
+#First, we can look at the most listings of the vehicles' color and model
+data %>%
+  group_by(model,color)%>%
+  summarise(listings=n()) %>%
+  arrange(desc(listings))    #Organize from most listings to least listings
+
+#We can look at the largest mean
+data %>%
+  group_by(model,color)%>%
+  summarise(listings=n(), avg=mean(price)) %>%
+  arrange(desc(avg)) %>%  #Arrange the observations in descending order of average price
+  filter(listings>35)     #We only look at the models and colors that have over 35 listings
+                #There are many combinations of model and color(49*127=6223)
+                #We are only concerned with the vehicle colors and models that have
+                #a moderate amount of observations(larger number of observations closer to the population mean)
+#We can create a few box plots of these pairwise analyses
+#The first boxplot will compare mean prices for the most listed combinations of color and model
+pairdata1=data %>% #Organize the vehicles' color and model in descending order of total listings
+  group_by(model,color)%>%
+  summarise(listings=n()) %>%
+  arrange(desc(listings)) %>%
+  filter(listings>35) #We only want to compare prices for vehicles that have a larger number of listings   
+pairdata1
+#Create a new data frame that has another column combines the paired color and model strings for all observations:
+datamut=mutate(data, Color_Model= paste(color,model, sep = " "))  
+#Create a new column in the pairdata1 object that contains the concatenated string of the color and model strings
+pairdata1=mutate(pairdata1, color_model= paste(color,model,sep= " ")) 
+#We find the locations of the most listed color and model vehicles in the full data set with the concatenated column:
+index_cm1=which(datamut$Color_Model==pairdata1$color_model[1])
+for(i in 2:9){
+index_cm2=which(datamut$Color_Model==pairdata1$color_model[i])
+index_cm1=c(index_cm1, index_cm2)
+}
+pairwise_box_data=data[index_cm1,]
+pairwise_box_data=mutate(pairwise_box_data, color_mod=paste(color, model, sep= " "))
+#Create a grouped boxplot of the paired colors and models(that have the most listings) with their mean listing price:
+ggplot(data=pairwise_box_data,mapping=aes(x=color_mod,y=price))+geom_boxplot() + labs(title="Box Plot For Color and Model", x="Color and Model", y="Price")
+
+
+
+```
+The model and color that is listed the most is the white door vehicle(182 listings). The black door vehicle has the 2nd most listings(146), the gray door has the 3rd most listings(90) and the white f-150 has the 4th most listings(89). The boxplot allows us to compare the mean prices for the most listed paired vehicle colors and models. The dark black horizontal line represents the mean price. For vehicle colors and models that had over 35 listings, the black f-150(42 listings) had the largest mean listing price(\$30831.45). The second largest listed price is the white f-150 vehicle(89 listings) at $25968.78	and the third largest is the white transit vehicle at \$23251.220. Another notable detail is that the most listed paired color and model, door white(182 listings) had a mean listed price of \$14463.62.
+
+
+
+
+
+--------------------------------------------------------------------------------------------
+Check some fits using the categorical variables:
+
+```{r}
+#Since there are many levels to these categorical variables, I think its best we see how the SSE and R^2 values change depending on the variables in the model. We can compare these values and make inferences:
+#Model 1: Color
+fit1=lm(price~color, data=data)
+fit1sum=c(summary(fit1)$sigma,summary(fit1)$r.squared, summary(fit1)$adj.r.squared, summary(fit1)$fstatistic[1])
+#Model 2: Model
+fit2=lm(price~model, data=data)
+fit2sum=c(summary(fit2)$sigma,summary(fit2)$r.squared, summary(fit2)$adj.r.squared, summary(fit2)$fstatistic[1])
+#Model 3: Color and Model
+fit3=lm(price~color+model, data=data)
+fit3sum=c(summary(fit3)$sigma,summary(fit3)$r.squared, summary(fit3)$adj.r.squared, summary(fit3)$fstatistic[1])
+fitmat=rbind(fit1sum,fit2sum,fit3sum)
+colnames(fitmat)=c("Sigma", "R^2", "R_a^2","F-stat")
+rownames(fitmat)=c("Fit 1(Color)", "Fit 2(Model)", "Fit 3(Color,Model)")
+fitmat
+```
+
+These fits reveal the relationship between color, model, and vehicle price. First, we see the the regression with color and model has the largest $R^2$ and $R_a^2$, and the smallest $\hat{\sigma}$. When we remove color, we can see that there is a very small change in the values of $R^2$, $R_a^2$, and $\hat{\sigma}$. Contrastly, the model with just color as a predictor has large changes in $R^2$, $R_a^2$, and $\hat{\sigma}$. For this model, we can also see that the F-stat is small, which suggests that the model is not significantly better than the model with no predictors. Therefore, this suggests that color explains little to none of the variance in vehicle price. There is evidence that color may not be needed in the final model and that vehicle model may be a significant predictor in the final model to predict vehicle price. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
